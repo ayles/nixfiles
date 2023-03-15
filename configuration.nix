@@ -106,6 +106,7 @@ in
     fuzzel
     git
     google-chrome
+    htop
     jq
     kitty
     neofetch
