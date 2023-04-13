@@ -1,10 +1,37 @@
-{ config, pkgs, ... }:
+{ config, pkgs, hostname, inputs, ... }:
 
 let
   user = "ayles";
+  stateVersion = "22.11";
 in
 {
+  imports = with inputs; [
+    home-manager.nixosModules.default
+    hyprland.nixosModules.default
+  ];
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  security.sudo.wheelNeedsPassword = false;
+
+  programs.hyprland = {
+    enable = true;
+    nvidiaPatches = true;
+  };
+
+  home-manager.users.${user} = {
+    home = {
+      pointerCursor = {
+        gtk.enable = true;
+        x11.enable = true;
+        package = pkgs.bibata-cursors;
+        name = "Bibata-Modern-Classic";
+        size = 24;
+      };
+      stateVersion = stateVersion;
+    };
+    gtk.enable = true;
+  };
 
   nixpkgs.config.allowUnfree = true;
   nixpkgs.overlays = [
@@ -38,8 +65,10 @@ in
     };
   };
 
-  networking.hostName = "ayles-pc";
-  networking.wireless.iwd.enable = true;
+  boot.supportedFilesystems = [ "ntfs" ];
+
+  networking.hostName = hostname;
+  networking.networkmanager.enable = true;
 
   time.timeZone = "Europe/Moscow";
 
@@ -48,6 +77,19 @@ in
   hardware.opengl.enable = true;
   hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
   hardware.nvidia.modesetting.enable = true;
+  hardware.bluetooth.enable = true;
+
+  services.hardware.openrgb.enable = true;
+  services.blueman.enable = true;
+  services.openvpn.servers = {
+    butter = {
+        config = ''
+            config /home/${user}/.openvpn/butter.conf
+            connect-retry 15
+        '';
+        autoStart = false;
+    };
+  };
 
   # Enable the X11 windowing system.
   # Needed only for sddm, just for now
@@ -71,8 +113,8 @@ in
   # services.printing.enable = true;
 
   # Enable sound.
-  # sound.enable = true;
-  # hardware.pulseaudio.enable = true;
+  sound.enable = true;
+  hardware.pulseaudio.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -80,7 +122,7 @@ in
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.${user} = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "networkmanager" "docker" ]; # Enable ‘sudo’ for the user.
     packages = with pkgs; [
     ];
   };
@@ -92,10 +134,18 @@ in
   };
   programs.neovim.defaultEditor = true;
 
+  virtualisation.docker.enable = true;
+
+  # Some Windows dualboot compat
+  time.hardwareClockInLocalTime = true;
+
   environment.defaultPackages = [ ];
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    (python311.withPackages (p: with p; [
+        openai
+    ]))
     chezmoi
     clang-tools
     cmake
@@ -103,19 +153,28 @@ in
     curl
     dunst
     eww-wayland
+    file
     fuzzel
+    gdb
     git
+    git-lfs
     google-chrome
     htop
+    iftop
     jq
     kitty
+    lldb
     neofetch
     neovim
     nixpkgs-fmt
+    nodePackages.pyright
+    perf-tools
+    ripgrep
     rnix-lsp
     sumneko-lua-language-server
     tdesktop
     unzip
+    wl-clipboard
   ];
 
   environment.sessionVariables = rec {
@@ -156,6 +215,6 @@ in
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "22.11"; # Did you read the comment?
+  system.stateVersion = stateVersion; # Did you read the comment?
 }
 

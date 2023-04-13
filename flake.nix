@@ -4,23 +4,28 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     hyprland.url = "github:hyprwm/Hyprland";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, hyprland, ... }: {
-    nixosConfigurations.ayles-pc = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
+  outputs = { self, nixpkgs, hyprland, home-manager, ... }@inputs:
+  let
+    system = "x86_64-linux";
+    hostname = "ayles-pc";
+  in
+  {
+    nixosConfigurations.${hostname} = nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {
+        inherit inputs;
+        inherit hostname;
+      };
       modules = [
         ./hardware-configuration.nix
         ./configuration.nix
-        hyprland.nixosModules.default
-        {
-          programs.hyprland = {
-            enable = true;
-            nvidiaPatches = true;
-          };
-        }
       ];
-      specialArgs = { inherit inputs; };
     };
   };
 }
