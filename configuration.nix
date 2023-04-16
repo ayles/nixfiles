@@ -75,7 +75,7 @@ in
   i18n.defaultLocale = "en_US.UTF-8";
 
   hardware.opengl.enable = true;
-  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.production;
   hardware.nvidia.modesetting.enable = true;
   hardware.bluetooth.enable = true;
 
