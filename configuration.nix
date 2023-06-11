@@ -93,10 +93,12 @@ in
 
   # Enable the X11 windowing system.
   # Needed only for sddm, just for now
-  services.xserver.enable = true;
-  services.xserver.excludePackages = with pkgs; [ xterm ];
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.videoDrivers = [ "nvidia" ];
+  services.xserver = {
+    enable = true;
+    excludePackages = with pkgs; [ xterm ];
+    displayManager.gdm.enable = true;
+    videoDrivers = [ "nvidia" ];
+  };
 
   services.openssh.enable = true;
   services.openssh.settings.PasswordAuthentication = true;
@@ -146,6 +148,10 @@ in
     (python311.withPackages (p: with p; [
         openai
     ]))
+    perl
+    pkgs.linuxPackages_latest.perf
+    tmux
+    nodejs
     chezmoi
     clang-tools
     cmake
