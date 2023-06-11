@@ -148,6 +148,15 @@ in
     (python311.withPackages (p: with p; [
         openai
     ]))
+    (stdenv.mkDerivation {
+      name = "neovim with env";
+      unpackPhase = "true";
+      nativeBuildInputs = [ makeWrapper ];
+      postFixup = ''
+        makeWrapper ${neovim}/bin/nvim $out/bin/nvim \
+        --prefix PATH : ${lib.makeBinPath [ stdenv.cc ]}
+      '';
+    })
     perl
     pkgs.linuxPackages_latest.perf
     tmux
@@ -171,7 +180,6 @@ in
     kitty
     lldb
     neofetch
-    neovim
     nixpkgs-fmt
     nodePackages.pyright
     perf-tools
